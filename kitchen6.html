@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>r.mint - キッチン表示</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mint-primary: #4a9b8e;
+            --mint-light: #e8f5f3;
+            --mint-dark: #2d5f56;
+            --cream: #faf8f5;
+            --charcoal: #3a3a3a;
+            --warm-white: #fffcf7;
+            --terracotta: #d4756c;
+            --orange: #ff9933;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, var(--cream) 0%, var(--mint-light) 100%);
+            color: var(--charcoal);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            background: var(--warm-white);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 300;
+            color: var(--mint-dark);
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--mint-primary);
+            letter-spacing: 1px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--mint-primary);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .orders-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .order-card {
+            background: var(--warm-white);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            border-left: 6px solid var(--orange);
+            animation: slideIn 0.3s ease;
+            transition: all 0.3s ease;
+        }
+
+        .order-card.completed {
+            opacity: 0.5;
+            border-left-color: #9ca3af;
+        }
+
+        .order-card.completed .order-items {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .order-card.completed .complete-btn {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--mint-light);
+        }
+
+        .table-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--mint-dark);
+        }
+
+        .order-time {
+            font-size: 13px;
+            color: #7a7a7a;
+        }
+
+        .elapsed-time {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--orange);
+            margin-top: 4px;
+        }
+
+        .elapsed-time.warning {
+            color: var(--terracotta);
+        }
+
+        .call-notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--terracotta);
+            color: white;
+            padding: 20px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(212, 117, 108, 0.4);
+            animation: slideInRight 0.3s ease, shake 0.5s ease 0.3s;
+            z-index: 1000;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
+        .order-items {
+            margin-bottom: 20px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--mint-light);
+        }
+
+        .item-name {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--charcoal);
+        }
+
+        .item-quantity {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--mint-primary);
+        }
+
+        .complete-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--mint-primary), var(--mint-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+        }
+
+        .complete-btn:active {
+            transform: scale(0.98);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #9a9a9a;
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-text {
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div class="logo">r.mint</div>
+            <div class="subtitle">KITCHEN DISPLAY</div>
+        </div>
+        <div class="status">
+            <span class="status-dot"></span>
+            <span>接続中</span>
+        </div>
+    </div>
+
+    <!-- 音声有効化オーバーレイ -->
+    <div id="audio-enable-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+        <button onclick="enableAudio()" style="padding: 24px 48px; font-size: 20px; background: var(--mint-primary); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700;">
+            🔔 通知音を有効にする
+        </button>
+    </div>
+
+    <div class="orders-container" id="orders-container">
+        <div class="empty-state">
+            <div class="empty-icon">👨‍🍳</div>
+            <p class="empty-text">注文待ちです</p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase設定
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyClG9FZfjx4iA3_VwiSXwksjGIo-6kLRMg",
+            authDomain: "rmint-order.firebaseapp.com",
+            databaseURL: "https://rmint-order-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "rmint-order",
+            storageBucket: "rmint-order.firebasestorage.app",
+            messagingSenderId: "115039847213",
+            appId: "1:115039847213:web:16c3f6959ce094682e49a4",
+            measurementId: "G-GPJYF7XPXB"
+        };
+
+        // Firebase初期化
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // 音声有効化フラグ
+        let audioEnabled = false;
+
+        // 音声有効化ボタン
+        window.enableAudio = function() {
+            // ダミー音声で権限取得
+            const utterance = new SpeechSynthesisUtterance('準備完了');
+            utterance.volume = 0;
+            speechSynthesis.speak(utterance);
+            
+            // ダミービープ
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            gainNode.gain.value = 0;
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.01);
+            
+            audioEnabled = true;
+            document.getElementById('audio-enable-overlay').style.display = 'none';
+        };
+
+        // 音声読み上げ関数
+        function speakNotification(message) {
+            if (!audioEnabled) return;
+            const utterance = new SpeechSynthesisUtterance(message);
+            utterance.lang = 'ja-JP';
+            utterance.rate = 1.2;
+            utterance.pitch = 1.0;
+            speechSynthesis.speak(utterance);
+        }
+
+        // ビープ音
+        function playBeep() {
+            if (!audioEnabled) return;
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                console.log('ビープ音エラー:', e);
+            }
+        }
+
+        // 経過時間を計算
+        function getElapsedTime(timestamp) {
+            const now = new Date();
+            const orderTime = new Date(timestamp);
+            const diff = Math.floor((now - orderTime) / 1000); // 秒
+            
+            const minutes = Math.floor(diff / 60);
+            const seconds = diff % 60;
+            
+            return {
+                text: `${minutes}分${seconds}秒`,
+                isWarning: minutes >= 5
+            };
+        }
+        
+        let previousOrderIds = new Set();
+        let previousCallIds = new Set();
+        let isFirstLoad = true;
+
+        // 注文をリアルタイムで監視
+        const ordersRef = ref(database, 'orders');
+        onValue(ordersRef, (snapshot) => {
+            const orders = snapshot.val();
+            
+            if (!isFirstLoad && orders) {
+                // 新規注文を検出
+                const currentOrderIds = new Set(Object.keys(orders));
+                currentOrderIds.forEach(orderId => {
+                    if (!previousOrderIds.has(orderId)) {
+                        // 新規注文！
+                        const order = orders[orderId];
+                        speakNotification(`テーブル${order.tableNumber || '不明'}から新しい注文です`);
+                        playBeep();
+                    }
+                });
+                previousOrderIds = currentOrderIds;
+            } else {
+                // 初回ロード
+                if (orders) {
+                    previousOrderIds = new Set(Object.keys(orders));
+                }
+                isFirstLoad = false;
+            }
+            
+            displayOrders(orders);
+        });
+
+        // 呼び出しを監視
+        const callsRef = ref(database, 'calls');
+        onValue(callsRef, (snapshot) => {
+            const calls = snapshot.val();
+            
+            if (calls) {
+                const currentCallIds = new Set(Object.keys(calls));
+                currentCallIds.forEach(callId => {
+                    if (!previousCallIds.has(callId)) {
+                        // 新規呼び出し！
+                        const call = calls[callId];
+                        showCallNotification(call);
+                        speakNotification(`テーブル${call.tableNumber || '不明'}からスタッフ呼び出しです`);
+                        playBeep();
+                    }
+                });
+                previousCallIds = currentCallIds;
+            }
+        });
+
+        // 呼び出し通知を表示
+        function showCallNotification(call) {
+            const notification = document.createElement('div');
+            notification.className = 'call-notification';
+            notification.textContent = `🔔 テーブル ${call.tableNumber || '不明'} 呼び出し中`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // 経過時間を1秒ごとに更新
+        setInterval(() => {
+            document.querySelectorAll('.elapsed-time').forEach(elem => {
+                const timestamp = elem.dataset.timestamp;
+                if (timestamp) {
+                    const elapsed = getElapsedTime(timestamp);
+                    elem.textContent = elapsed.text;
+                    if (elapsed.isWarning) {
+                        elem.classList.add('warning');
+                    }
+                }
+            });
+        }, 1000);
+
+        function displayOrders(orders) {
+            const container = document.getElementById('orders-container');
+            
+            if (!orders || Object.keys(orders).length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👨‍🍳</div>
+                        <p class="empty-text">注文待ちです</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            Object.keys(orders).forEach(orderId => {
+                const order = orders[orderId];
+                html += createOrderCard(orderId, order);
+            });
+
+            container.innerHTML = html;
+        }
+
+        function createOrderCard(orderId, order) {
+            const time = new Date(order.timestamp).toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const elapsed = getElapsedTime(order.timestamp);
+            const completedClass = order.completed ? 'completed' : '';
+
+            let itemsHtml = '';
+            order.items.forEach(item => {
+                itemsHtml += `
+                    <div class="order-item">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-quantity">×${item.quantity}</span>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="order-card ${completedClass}" id="order-${orderId}">
+                    <div class="order-header">
+                        <span class="table-number">テーブル ${order.tableNumber || '不明'}</span>
+                        <div>
+                            <div class="order-time">${time}</div>
+                            <div class="elapsed-time ${elapsed.isWarning ? 'warning' : ''}" data-timestamp="${order.timestamp}">
+                                ${elapsed.text}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="order-items">
+                        ${itemsHtml}
+                    </div>
+                    <button class="complete-btn" onclick="completeOrder('${orderId}')" ${order.completed ? 'disabled' : ''}>
+                        ${order.completed ? '完了済み' : '完了'}
+                    </button>
+                </div>
+            `;
+        }
+
+        // グローバルスコープに関数を公開
+        window.completeOrder = async function(orderId) {
+            const orderRef = window.firebaseRef(window.firebaseDB, `orders/${orderId}`);
+            const { update } = await import("https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js");
+            
+            // 完了フラグを立てる（削除せずに残す）
+            await update(orderRef, { completed: true });
+            
+            // カードに完了スタイルを適用
+            const card = document.getElementById(`order-${orderId}`);
+            if (card) {
+                card.classList.add('completed');
+                card.querySelector('.complete-btn').textContent = '完了済み';
+                card.querySelector('.complete-btn').disabled = true;
+            }
+        };
+
+        // Firebase参照をグローバルに
+        window.firebaseDB = database;
+        window.firebaseRef = ref;
+    </script>
+</body>
+</html>
