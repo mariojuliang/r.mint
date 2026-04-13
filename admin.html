@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>r.mint - 管理画面</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mint-primary: #4a9b8e;
+            --mint-light: #e8f5f3;
+            --mint-dark: #2d5f56;
+            --cream: #faf8f5;
+            --charcoal: #3a3a3a;
+            --warm-white: #fffcf7;
+            --terracotta: #d4756c;
+            --orange: #ff9933;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, var(--cream) 0%, var(--mint-light) 100%);
+            color: var(--charcoal);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--warm-white);
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 300;
+            color: var(--mint-dark);
+            letter-spacing: 3px;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--mint-primary);
+            letter-spacing: 1px;
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--warm-white);
+            border-bottom: 2px solid var(--mint-light);
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 16px 24px;
+            border: none;
+            background: none;
+            color: #999;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            color: var(--mint-primary);
+            border-bottom-color: var(--mint-primary);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* メニュー編集 */
+        .menu-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .menu-item-card {
+            background: var(--warm-white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .menu-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .menu-item-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--mint-dark);
+        }
+
+        .menu-item-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--mint-primary);
+        }
+
+        .menu-item-desc {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .edit-btn {
+            padding: 8px 16px;
+            background: var(--mint-light);
+            color: var(--mint-dark);
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .add-menu-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--mint-primary), var(--mint-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+
+        /* 顧客管理 */
+        .customer-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .customer-card {
+            background: var(--warm-white);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .customer-card:active {
+            transform: scale(0.98);
+        }
+
+        .customer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .customer-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--mint-dark);
+        }
+
+        .customer-stats {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* 分析 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--warm-white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--mint-primary);
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .period-btn {
+            padding: 10px 20px;
+            background: var(--mint-light);
+            color: var(--mint-dark);
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .period-btn.active {
+            background: var(--mint-primary);
+            color: white;
+        }
+
+        .ranking-list {
+            background: var(--warm-white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .ranking-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--mint-dark);
+            margin-bottom: 16px;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--mint-light);
+        }
+
+        .ranking-rank {
+            font-weight: 700;
+            color: var(--mint-primary);
+            margin-right: 12px;
+        }
+
+        /* モーダル */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--warm-white);
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--mint-light);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--mint-dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 32px;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--charcoal);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--mint-light);
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--mint-primary);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--mint-primary), var(--mint-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .visit-history {
+            margin-top: 20px;
+        }
+
+        .visit-item {
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .visit-date {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .visit-items {
+            font-size: 14px;
+            color: var(--charcoal);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">r.mint</div>
+        <div class="subtitle">MANAGEMENT</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('menu')">メニュー編集</button>
+        <button class="tab" onclick="switchTab('customers')">顧客管理</button>
+        <button class="tab" onclick="switchTab('analytics')">分析</button>
+    </div>
+
+    <!-- メニュー編集タブ -->
+    <div class="tab-content active" id="menu-tab">
+        <div class="menu-list" id="menu-list"></div>
+        <button class="add-menu-btn" onclick="showAddMenu()">+ メニューを追加</button>
+    </div>
+
+    <!-- 顧客管理タブ -->
+    <div class="tab-content" id="customers-tab">
+        <div class="customer-list" id="customer-list"></div>
+    </div>
+
+    <!-- 分析タブ -->
+    <div class="tab-content" id="analytics-tab">
+        <div class="period-selector">
+            <button class="period-btn active" onclick="changePeriod('day')">日</button>
+            <button class="period-btn" onclick="changePeriod('month')">月</button>
+            <button class="period-btn" onclick="changePeriod('year')">年</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">総売上</div>
+                <div class="stat-value" id="total-sales">¥0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">注文数</div>
+                <div class="stat-value" id="total-orders">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">客単価</div>
+                <div class="stat-value" id="avg-price">¥0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">来店客数</div>
+                <div class="stat-value" id="total-customers">0</div>
+            </div>
+        </div>
+
+        <div class="ranking-list">
+            <div class="ranking-title">人気メニューランキング</div>
+            <div id="menu-ranking"></div>
+        </div>
+    </div>
+
+    <!-- メニュー編集モーダル -->
+    <div class="modal" id="menu-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="menu-modal-title">メニューを追加</h3>
+                <button class="modal-close" onclick="closeMenuModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">メニュー名</label>
+                <input type="text" class="form-input" id="menu-name" placeholder="例: ドリンク">
+            </div>
+            <div class="form-group">
+                <label class="form-label">価格（円）</label>
+                <input type="number" class="form-input" id="menu-price" placeholder="500">
+            </div>
+            <div class="form-group">
+                <label class="form-label">説明</label>
+                <textarea class="form-input form-textarea" id="menu-desc" placeholder="商品の説明を入力してください"></textarea>
+            </div>
+            <button class="save-btn" onclick="saveMenu()">保存</button>
+        </div>
+    </div>
+
+    <!-- 顧客詳細モーダル -->
+    <div class="modal" id="customer-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="customer-modal-title">顧客詳細</h3>
+                <button class="modal-close" onclick="closeCustomerModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">ユーザー名</label>
+                <div id="customer-username" style="font-size: 16px; font-weight: 600;"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">メモ</label>
+                <textarea class="form-input form-textarea" id="customer-memo" placeholder="顧客メモを入力"></textarea>
+            </div>
+            <div class="visit-history">
+                <div class="form-label">来店履歴</div>
+                <div id="visit-history-list"></div>
+            </div>
+            <button class="save-btn" onclick="saveCustomerMemo()">メモを保存</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getDatabase, ref, onValue, push, update, set } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyClG9FZfjx4iA3_VwiSXwksjGIo-6kLRMg",
+            authDomain: "rmint-order.firebaseapp.com",
+            databaseURL: "https://rmint-order-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "rmint-order",
+            storageBucket: "rmint-order.firebasestorage.app",
+            messagingSenderId: "115039847213",
+            appId: "1:115039847213:web:16c3f6959ce094682e49a4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        let menuData = {};
+        let orderHistory = {};
+        let currentPeriod = 'day';
+        let currentCustomerId = null;
+        let currentMenuId = null;
+
+        // タブ切り替え
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            if (tabName === 'analytics') {
+                loadAnalytics();
+            }
+        };
+
+        // メニューデータ読み込み
+        const menuRef = ref(database, 'menu');
+        onValue(menuRef, (snapshot) => {
+            menuData = snapshot.val() || {
+                drink: { name: 'ドリンク', price: 500, description: '' },
+                sweets: { name: 'スイーツ', price: 1000, description: '' },
+                soup: { name: 'スープ', price: 500, description: '' }
+            };
+            displayMenu();
+        });
+
+        // 注文履歴読み込み
+        const historyRef = ref(database, 'order_history');
+        onValue(historyRef, (snapshot) => {
+            orderHistory = snapshot.val() || {};
+            displayCustomers();
+        });
+
+        // メニュー表示
+        function displayMenu() {
+            const list = document.getElementById('menu-list');
+            let html = '';
+            
+            Object.entries(menuData).forEach(([id, menu]) => {
+                html += `
+                    <div class="menu-item-card">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">${menu.name}</span>
+                            <span class="menu-item-price">¥${menu.price}</span>
+                        </div>
+                        <div class="menu-item-desc">${menu.description || '説明なし'}</div>
+                        <button class="edit-btn" onclick="editMenu('${id}')">編集</button>
+                    </div>
+                `;
+            });
+            
+            list.innerHTML = html;
+        }
+
+        // 顧客表示
+        function displayCustomers() {
+            const list = document.getElementById('customer-list');
+            const customerMap = {};
+            
+            // 注文履歴から顧客を集計
+            Object.values(orderHistory).forEach(order => {
+                const userId = order.userId;
+                if (!customerMap[userId]) {
+                    customerMap[userId] = {
+                        userName: order.userName,
+                        visits: 0,
+                        totalSpent: 0,
+                        orders: []
+                    };
+                }
+                customerMap[userId].visits++;
+                customerMap[userId].totalSpent += order.total || 0;
+                customerMap[userId].orders.push(order);
+            });
+            
+            let html = '';
+            Object.entries(customerMap).forEach(([userId, customer]) => {
+                html += `
+                    <div class="customer-card" onclick="showCustomerDetail('${userId}')">
+                        <div class="customer-header">
+                            <span class="customer-name">${customer.userName} 様</span>
+                            <span class="customer-stats">来店${customer.visits}回</span>
+                        </div>
+                        <div class="customer-stats">累計: ¥${customer.totalSpent.toLocaleString()}</div>
+                    </div>
+                `;
+            });
+            
+            list.innerHTML = html || '<p style="text-align: center; color: #999; padding: 40px;">顧客データがありません</p>';
+        }
+
+        // メニュー追加/編集
+        window.showAddMenu = function() {
+            currentMenuId = null;
+            document.getElementById('menu-modal-title').textContent = 'メニューを追加';
+            document.getElementById('menu-name').value = '';
+            document.getElementById('menu-price').value = '';
+            document.getElementById('menu-desc').value = '';
+            document.getElementById('menu-modal').classList.add('show');
+        };
+
+        window.editMenu = function(menuId) {
+            currentMenuId = menuId;
+            const menu = menuData[menuId];
+            document.getElementById('menu-modal-title').textContent = 'メニューを編集';
+            document.getElementById('menu-name').value = menu.name;
+            document.getElementById('menu-price').value = menu.price;
+            document.getElementById('menu-desc').value = menu.description || '';
+            document.getElementById('menu-modal').classList.add('show');
+        };
+
+        window.saveMenu = async function() {
+            const name = document.getElementById('menu-name').value;
+            const price = parseInt(document.getElementById('menu-price').value);
+            const description = document.getElementById('menu-desc').value;
+            
+            if (!name || !price) {
+                alert('メニュー名と価格を入力してください');
+                return;
+            }
+            
+            const menuId = currentMenuId || name.toLowerCase().replace(/\s/g, '_');
+            const menuRef = ref(database, `menu/${menuId}`);
+            
+            await set(menuRef, {
+                name: name,
+                price: price,
+                description: description
+            });
+            
+            closeMenuModal();
+        };
+
+        window.closeMenuModal = function() {
+            document.getElementById('menu-modal').classList.remove('show');
+        };
+
+        // 顧客詳細
+        window.showCustomerDetail = function(userId) {
+            currentCustomerId = userId;
+            const customerOrders = Object.values(orderHistory).filter(o => o.userId === userId);
+            const customer = customerOrders[0];
+            
+            document.getElementById('customer-username').textContent = customer.userName + ' 様';
+            
+            // メモ読み込み（TODO: 実装）
+            document.getElementById('customer-memo').value = '';
+            
+            // 来店履歴
+            let historyHtml = '';
+            customerOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(order => {
+                const date = new Date(order.timestamp).toLocaleString('ja-JP');
+                const items = order.items.map(item => `${item.name}×${item.quantity}`).join(', ');
+                historyHtml += `
+                    <div class="visit-item">
+                        <div class="visit-date">${date}</div>
+                        <div class="visit-items">${items} - ¥${order.total.toLocaleString()}</div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('visit-history-list').innerHTML = historyHtml;
+            document.getElementById('customer-modal').classList.add('show');
+        };
+
+        window.saveCustomerMemo = async function() {
+            const memo = document.getElementById('customer-memo').value;
+            const customerRef = ref(database, `customers/${currentCustomerId}`);
+            await update(customerRef, { memo: memo });
+            alert('メモを保存しました');
+            closeCustomerModal();
+        };
+
+        window.closeCustomerModal = function() {
+            document.getElementById('customer-modal').classList.remove('show');
+        };
+
+        // 分析
+        window.changePeriod = function(period) {
+            currentPeriod = period;
+            document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            loadAnalytics();
+        };
+
+        function loadAnalytics() {
+            const now = new Date();
+            let startDate;
+            
+            if (currentPeriod === 'day') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            } else if (currentPeriod === 'month') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            } else {
+                startDate = new Date(now.getFullYear(), 0, 1);
+            }
+            
+            const filteredOrders = Object.values(orderHistory).filter(order => 
+                new Date(order.paidAt || order.timestamp) >= startDate
+            );
+            
+            // 統計計算
+            const totalSales = filteredOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+            const totalOrders = filteredOrders.length;
+            const avgPrice = totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0;
+            const uniqueCustomers = new Set(filteredOrders.map(o => o.userId)).size;
+            
+            document.getElementById('total-sales').textContent = `¥${totalSales.toLocaleString()}`;
+            document.getElementById('total-orders').textContent = totalOrders;
+            document.getElementById('avg-price').textContent = `¥${avgPrice.toLocaleString()}`;
+            document.getElementById('total-customers').textContent = uniqueCustomers;
+            
+            // メニューランキング
+            const menuCount = {};
+            filteredOrders.forEach(order => {
+                order.items.forEach(item => {
+                    menuCount[item.name] = (menuCount[item.name] || 0) + item.quantity;
+                });
+            });
+            
+            const ranking = Object.entries(menuCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            let rankingHtml = '';
+            ranking.forEach(([name, count], index) => {
+                rankingHtml += `
+                    <div class="ranking-item">
+                        <div>
+                            <span class="ranking-rank">${index + 1}位</span>
+                            <span>${name}</span>
+                        </div>
+                        <span>${count}個</span>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('menu-ranking').innerHTML = rankingHtml || '<p style="text-align: center; color: #999;">データがありません</p>';
+        }
+    </script>
+</body>
+</html>
