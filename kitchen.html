@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>r.mint - キッチン表示</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mint-primary: #4a9b8e;
+            --mint-light: #e8f5f3;
+            --mint-dark: #2d5f56;
+            --cream: #faf8f5;
+            --charcoal: #3a3a3a;
+            --warm-white: #fffcf7;
+            --terracotta: #d4756c;
+            --orange: #ff9933;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, var(--cream) 0%, var(--mint-light) 100%);
+            color: var(--charcoal);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            background: var(--warm-white);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 300;
+            color: var(--mint-dark);
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--mint-primary);
+            letter-spacing: 1px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--mint-primary);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .orders-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .order-card {
+            background: var(--warm-white);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            border-left: 6px solid var(--orange);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--mint-light);
+        }
+
+        .table-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--mint-dark);
+        }
+
+        .order-time {
+            font-size: 13px;
+            color: #7a7a7a;
+        }
+
+        .order-items {
+            margin-bottom: 20px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--mint-light);
+        }
+
+        .item-name {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--charcoal);
+        }
+
+        .item-quantity {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--mint-primary);
+        }
+
+        .complete-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--mint-primary), var(--mint-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+        }
+
+        .complete-btn:active {
+            transform: scale(0.98);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #9a9a9a;
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-text {
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div class="logo">r.mint</div>
+            <div class="subtitle">KITCHEN DISPLAY</div>
+        </div>
+        <div class="status">
+            <span class="status-dot"></span>
+            <span>接続中</span>
+        </div>
+    </div>
+
+    <div class="orders-container" id="orders-container">
+        <div class="empty-state">
+            <div class="empty-icon">👨‍🍳</div>
+            <p class="empty-text">注文待ちです</p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase設定
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyClG9FZfjx4iA3_VwiSXwksjGIo-6kLRMg",
+            authDomain: "rmint-order.firebaseapp.com",
+            databaseURL: "https://rmint-order-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "rmint-order",
+            storageBucket: "rmint-order.firebasestorage.app",
+            messagingSenderId: "115039847213",
+            appId: "1:115039847213:web:16c3f6959ce094682e49a4",
+            measurementId: "G-GPJYF7XPXB"
+        };
+
+        // Firebase初期化
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // 注文をリアルタイムで監視
+        const ordersRef = ref(database, 'orders');
+        onValue(ordersRef, (snapshot) => {
+            const orders = snapshot.val();
+            displayOrders(orders);
+        });
+
+        function displayOrders(orders) {
+            const container = document.getElementById('orders-container');
+            
+            if (!orders || Object.keys(orders).length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👨‍🍳</div>
+                        <p class="empty-text">注文待ちです</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            Object.keys(orders).forEach(orderId => {
+                const order = orders[orderId];
+                html += createOrderCard(orderId, order);
+            });
+
+            container.innerHTML = html;
+        }
+
+        function createOrderCard(orderId, order) {
+            const time = new Date(order.timestamp).toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            let itemsHtml = '';
+            order.items.forEach(item => {
+                itemsHtml += `
+                    <div class="order-item">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-quantity">×${item.quantity}</span>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="table-number">テーブル ${order.tableNumber || '不明'}</span>
+                        <span class="order-time">${time}</span>
+                    </div>
+                    <div class="order-items">
+                        ${itemsHtml}
+                    </div>
+                    <button class="complete-btn" onclick="completeOrder('${orderId}')">
+                        完了
+                    </button>
+                </div>
+            `;
+        }
+
+        // グローバルスコープに関数を公開
+        window.completeOrder = async function(orderId) {
+            const orderRef = ref(database, `orders/${orderId}`);
+            await remove(orderRef);
+        };
+    </script>
+</body>
+</html>
