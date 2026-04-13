@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>r.mint - ハンディ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mint-primary: #4a9b8e;
+            --mint-light: #e8f5f3;
+            --mint-dark: #2d5f56;
+            --cream: #faf8f5;
+            --charcoal: #3a3a3a;
+            --warm-white: #fffcf7;
+            --terracotta: #d4756c;
+            --orange: #ff9933;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, var(--cream) 0%, var(--mint-light) 100%);
+            color: var(--charcoal);
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .header {
+            background: var(--warm-white);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        }
+
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 300;
+            color: var(--mint-dark);
+            letter-spacing: 3px;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--mint-primary);
+            letter-spacing: 1px;
+        }
+
+        .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 80px;
+        }
+
+        .table-card {
+            background: var(--warm-white);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 4px solid #ddd;
+        }
+
+        .table-card.has-order {
+            border-left-color: var(--orange);
+        }
+
+        .table-card.has-call {
+            border-left-color: var(--terracotta);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-left-width: 4px; }
+            50% { border-left-width: 8px; }
+        }
+
+        .table-card:active {
+            transform: scale(0.98);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .table-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--mint-dark);
+        }
+
+        .table-amount {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--mint-primary);
+        }
+
+        .table-status {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .table-status-icon {
+            margin-right: 4px;
+        }
+
+        .table-customer {
+            font-size: 14px;
+            color: var(--charcoal);
+            font-weight: 500;
+        }
+
+        .table-items {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        /* 詳細モーダル */
+        .detail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .detail-modal.show {
+            display: flex;
+        }
+
+        .detail-content {
+            background: var(--warm-white);
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--mint-light);
+        }
+
+        .detail-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--mint-dark);
+        }
+
+        .detail-close {
+            background: none;
+            border: none;
+            font-size: 32px;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .detail-customer {
+            font-size: 18px;
+            color: var(--charcoal);
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .detail-items {
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--mint-light);
+        }
+
+        .item-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--charcoal);
+        }
+
+        .item-price {
+            font-size: 13px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .item-quantity {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--mint-primary);
+        }
+
+        .detail-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--mint-dark);
+            border-top: 2px solid var(--mint-light);
+            margin-top: 8px;
+        }
+
+        .detail-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--mint-primary), var(--mint-dark));
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: var(--mint-light);
+            color: var(--mint-dark);
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-icon {
+            font-size: 60px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .menu-item {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid var(--mint-primary);
+        }
+
+        .qty-btn {
+            width: 36px;
+            height: 36px;
+            border: 2px solid var(--mint-light);
+            background: white;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--mint-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .qty-btn:active {
+            transform: scale(0.95);
+            background: var(--mint-light);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">r.mint</div>
+        <div class="subtitle">HANDY TERMINAL</div>
+    </div>
+
+    <div class="tables-grid" id="tables-grid">
+        <div class="empty-state">
+            <div class="empty-icon">📱</div>
+            <p>読み込み中...</p>
+        </div>
+    </div>
+
+    <!-- 詳細モーダル -->
+    <div class="detail-modal" id="detail-modal">
+        <div class="detail-content">
+            <div class="detail-header">
+                <h3 class="detail-title" id="detail-title">テーブル 1</h3>
+                <button class="detail-close" onclick="closeDetail()">×</button>
+            </div>
+            <div class="detail-customer" id="detail-customer"></div>
+            <div class="detail-items" id="detail-items"></div>
+            <div class="detail-total">
+                <span>合計</span>
+                <span id="detail-total-amount">¥0</span>
+            </div>
+            <div class="detail-actions">
+                <button class="action-btn secondary" id="call-done-btn" onclick="markCallDone()" style="display: none;">呼び出し対応済み</button>
+                <button class="action-btn primary" onclick="checkout()">会計</button>
+            </div>
+            <div class="detail-actions" style="margin-top: 12px;">
+                <button class="action-btn secondary" onclick="showAddOrder()" style="grid-column: 1 / -1;">注文を追加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注文追加モーダル -->
+    <div class="detail-modal" id="add-order-modal">
+        <div class="detail-content">
+            <div class="detail-header">
+                <h3 class="detail-title">注文を追加</h3>
+                <button class="detail-close" onclick="closeAddOrder()">×</button>
+            </div>
+            <div style="display: grid; gap: 12px;">
+                <div class="menu-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 600;">ドリンク</span>
+                        <span style="color: var(--mint-primary); font-weight: 700;">¥500</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="qty-btn" onclick="changeQty('drink', -1)">－</button>
+                        <span id="drink-qty" style="min-width: 30px; text-align: center; font-weight: 700;">0</span>
+                        <button class="qty-btn" onclick="changeQty('drink', 1)">＋</button>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 600;">スイーツ</span>
+                        <span style="color: var(--mint-primary); font-weight: 700;">¥1,000</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="qty-btn" onclick="changeQty('sweets', -1)">－</button>
+                        <span id="sweets-qty" style="min-width: 30px; text-align: center; font-weight: 700;">0</span>
+                        <button class="qty-btn" onclick="changeQty('sweets', 1)">＋</button>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 600;">スープ</span>
+                        <span style="color: var(--mint-primary); font-weight: 700;">¥500</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="qty-btn" onclick="changeQty('soup', -1)">－</button>
+                        <span id="soup-qty" style="min-width: 30px; text-align: center; font-weight: 700;">0</span>
+                        <button class="qty-btn" onclick="changeQty('soup', 1)">＋</button>
+                    </div>
+                </div>
+            </div>
+            <div class="detail-total" style="margin-top: 20px;">
+                <span>小計</span>
+                <span id="add-order-total">¥0</span>
+            </div>
+            <div class="detail-actions" style="margin-top: 20px;">
+                <button class="action-btn primary" onclick="submitAddOrder()" style="grid-column: 1 / -1;">注文を確定</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase設定
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyClG9FZfjx4iA3_VwiSXwksjGIo-6kLRMg",
+            authDomain: "rmint-order.firebaseapp.com",
+            databaseURL: "https://rmint-order-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "rmint-order",
+            storageBucket: "rmint-order.firebasestorage.app",
+            messagingSenderId: "115039847213",
+            appId: "1:115039847213:web:16c3f6959ce094682e49a4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Square設定
+        const SQUARE_CONFIG = {
+            workerUrl: 'https://noisy-art-48d2.marimarimariojuliang.workers.dev',
+            locationId: 'LWSP2S9SGCTXH'
+        };
+
+        let allOrders = {};
+        let allCalls = {};
+        let currentOrderId = null;
+        let currentTableNum = null;
+        let addOrderCart = { drink: 0, sweets: 0, soup: 0 };
+        const prices = { drink: 500, sweets: 1000, soup: 500 };
+        const itemNames = { drink: 'ドリンク', sweets: 'スイーツ', soup: 'スープ' };
+
+        // 注文とテーブル状態を監視
+        const ordersRef = ref(database, 'orders');
+        const callsRef = ref(database, 'calls');
+
+        onValue(ordersRef, (snapshot) => {
+            allOrders = snapshot.val() || {};
+            updateTablesDisplay();
+        });
+
+        onValue(callsRef, (snapshot) => {
+            allCalls = snapshot.val() || {};
+            updateTablesDisplay();
+        });
+
+        function updateTablesDisplay() {
+            const grid = document.getElementById('tables-grid');
+            
+            // テーブル番号ごとに注文をグループ化
+            const tableData = {};
+            
+            // 注文をテーブルごとに集約（会計済みは除外）
+            Object.entries(allOrders).forEach(([orderId, order]) => {
+                const tableNum = order.tableNumber || '不明';
+                if (!tableData[tableNum]) {
+                    tableData[tableNum] = {
+                        orders: [],
+                        totalAmount: 0,
+                        customerName: order.userName,
+                        hasCalls: false
+                    };
+                }
+                // 会計済みでない注文のみ表示
+                if (!order.paid) {
+                    tableData[tableNum].orders.push({ id: orderId, ...order });
+                    tableData[tableNum].totalAmount += order.total || 0;
+                }
+            });
+
+            // 呼び出しをチェック
+            Object.values(allCalls).forEach(call => {
+                const tableNum = call.tableNumber || '不明';
+                if (tableData[tableNum]) {
+                    tableData[tableNum].hasCalls = true;
+                }
+            });
+
+            // テーブルカードを生成
+            if (Object.keys(tableData).length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📱</div>
+                        <p>注文がありません</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            Object.entries(tableData).sort((a, b) => {
+                const numA = parseInt(a[0]) || 999;
+                const numB = parseInt(b[0]) || 999;
+                return numA - numB;
+            }).forEach(([tableNum, data]) => {
+                const hasOrder = data.orders.length > 0;
+                const hasCalls = data.hasCalls;
+                
+                let statusIcon = '⚪️';
+                let statusText = '空席';
+                if (hasCalls) {
+                    statusIcon = '🔴';
+                    statusText = '呼び出し中';
+                } else if (hasOrder) {
+                    statusIcon = '🟢';
+                    statusText = '提供待ち';
+                }
+
+                const itemsSummary = data.orders.length > 0 
+                    ? data.orders[0].items.map(item => `${item.name}×${item.quantity}`).join(', ')
+                    : '-';
+
+                const customerName = hasOrder ? `${data.customerName || '-'} 様` : '-';
+
+                html += `
+                    <div class="table-card ${hasOrder ? 'has-order' : ''} ${hasCalls ? 'has-call' : ''}" 
+                         onclick="showTableDetail('${tableNum}')">
+                        <div class="table-header">
+                            <span class="table-number">テーブル ${tableNum}</span>
+                            <span class="table-amount">¥${data.totalAmount.toLocaleString()}</span>
+                        </div>
+                        <div class="table-status">
+                            <span class="table-status-icon">${statusIcon}</span>
+                            ${statusText}
+                        </div>
+                        <div class="table-customer">${customerName}</div>
+                        <div class="table-items">${itemsSummary}</div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+        }
+
+        window.showTableDetail = function(tableNum) {
+            // そのテーブルの注文を全て取得（完了済みは除外）
+            const tableOrders = Object.entries(allOrders).filter(([id, order]) => 
+                order.tableNumber == tableNum && !order.completed
+            );
+
+            if (tableOrders.length === 0) return;
+
+            currentTableNum = tableNum;
+
+            const firstOrder = tableOrders[0][1];
+            document.getElementById('detail-title').textContent = `テーブル ${tableNum}`;
+            document.getElementById('detail-customer').textContent = `${firstOrder.userName || 'ゲスト'} 様`;
+
+            // 呼び出しボタンの表示/非表示
+            const hasCall = Object.values(allCalls).some(call => call.tableNumber == tableNum);
+            document.getElementById('call-done-btn').style.display = hasCall ? 'block' : 'none';
+
+            // 全ての注文を統合して表示
+            let itemsHtml = '';
+            let totalAmount = 0;
+
+            tableOrders.forEach(([orderId, order]) => {
+                totalAmount += order.total || 0;
+                
+                order.items.forEach(item => {
+                    // 商品が完了済みかチェック
+                    const itemCompleted = item.completed || false;
+                    const itemClass = itemCompleted ? 'style="opacity: 0.5; text-decoration: line-through;"' : '';
+                    
+                    itemsHtml += `
+                        <div class="detail-item" ${itemClass}>
+                            <div class="item-info">
+                                <span class="item-name">${item.name}</span>
+                                <span class="item-price">¥${item.price}</span>
+                            </div>
+                            <span class="item-quantity">×${item.quantity}</span>
+                        </div>
+                    `;
+                });
+            });
+
+            document.getElementById('detail-items').innerHTML = itemsHtml;
+            document.getElementById('detail-total-amount').textContent = `¥${totalAmount.toLocaleString()}`;
+
+            document.getElementById('detail-modal').classList.add('show');
+        };
+
+        window.closeDetail = function() {
+            document.getElementById('detail-modal').classList.remove('show');
+            currentOrderId = null;
+            currentTableNum = null;
+        };
+
+        // 呼び出し対応済み
+        window.markCallDone = async function() {
+            if (!currentTableNum) return;
+
+            // このテーブルの呼び出しを全て削除
+            const callsToRemove = Object.entries(allCalls).filter(([id, call]) => 
+                call.tableNumber == currentTableNum
+            );
+
+            for (const [callId] of callsToRemove) {
+                const callRef = ref(database, `calls/${callId}`);
+                await remove(callRef);
+            }
+
+            document.getElementById('call-done-btn').style.display = 'none';
+        };
+
+        // 会計（Square連携）
+        window.checkout = async function() {
+            if (!currentTableNum) return;
+
+            // このテーブルの全注文を取得
+            const tableOrders = Object.entries(allOrders).filter(([id, order]) => 
+                order.tableNumber == currentTableNum
+            );
+
+            if (tableOrders.length === 0) {
+                alert('注文がありません');
+                return;
+            }
+
+            try {
+                // Square注文を作成
+                const lineItems = [];
+                let totalAmount = 0;
+
+                tableOrders.forEach(([orderId, order]) => {
+                    order.items.forEach(item => {
+                        lineItems.push({
+                            name: item.name,
+                            quantity: String(item.quantity),
+                            base_price_money: {
+                                amount: item.price,
+                                currency: 'JPY'
+                            }
+                        });
+                        totalAmount += item.price * item.quantity;
+                    });
+                });
+
+                // Square APIに注文を送信（Cloudflare Worker経由）
+                const orderData = {
+                    idempotency_key: `rmint-${currentTableNum}-${Date.now()}`,
+                    order: {
+                        location_id: SQUARE_CONFIG.locationId,
+                        line_items: lineItems,
+                        metadata: {
+                            table_number: currentTableNum,
+                            source: 'r.mint'
+                        }
+                    }
+                };
+
+                const response = await fetch(SQUARE_CONFIG.workerUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.order) {
+                    // 成功 - 注文を履歴に移動
+                    const { push } = await import("https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js");
+                    
+                    for (const [orderId, order] of tableOrders) {
+                        // 履歴に保存
+                        const historyRef = ref(database, 'order_history');
+                        await push(historyRef, {
+                            ...order,
+                            squareOrderId: result.order.id,
+                            paidAt: new Date().toISOString()
+                        });
+                        
+                        // 進行中の注文から削除
+                        const orderRef = ref(database, `orders/${orderId}`);
+                        await remove(orderRef);
+                    }
+                    
+                    alert(`会計完了！\n\nSquare注文ID: ${result.order.id}\n合計: ¥${totalAmount.toLocaleString()}\n\n※Sandbox環境のため、実際の決済は行われません`);
+                    
+                    console.log('Square注文:', result.order);
+                    closeDetail();
+                } else {
+                    // エラー
+                    console.error('Square API エラー:', result);
+                    alert(`エラーが発生しました：\n${JSON.stringify(result.errors || result, null, 2)}`);
+                }
+
+            } catch (error) {
+                console.error('会計エラー:', error);
+                alert(`会計処理に失敗しました：\n${error.message}`);
+            }
+        };
+
+        // 注文追加モーダルを開く
+        window.showAddOrder = function() {
+            // このテーブルの既存注文を確認
+            const tableOrders = Object.entries(allOrders).filter(([id, order]) => 
+                order.tableNumber == currentTableNum
+            );
+            
+            if (tableOrders.length === 0) {
+                alert('このテーブルには注文がありません。\n先にお客様が注文してください。');
+                return;
+            }
+            
+            addOrderCart = { drink: 0, sweets: 0, soup: 0 };
+            document.getElementById('drink-qty').textContent = '0';
+            document.getElementById('sweets-qty').textContent = '0';
+            document.getElementById('soup-qty').textContent = '0';
+            document.getElementById('add-order-total').textContent = '¥0';
+            document.getElementById('add-order-modal').classList.add('show');
+        };
+
+        window.closeAddOrder = function() {
+            document.getElementById('add-order-modal').classList.remove('show');
+        };
+
+        // 数量変更
+        window.changeQty = function(item, delta) {
+            addOrderCart[item] = Math.max(0, addOrderCart[item] + delta);
+            document.getElementById(`${item}-qty`).textContent = addOrderCart[item];
+            
+            const total = Object.keys(addOrderCart).reduce((sum, key) => 
+                sum + (addOrderCart[key] * prices[key]), 0
+            );
+            document.getElementById('add-order-total').textContent = `¥${total.toLocaleString()}`;
+        };
+
+        // 注文を確定
+        window.submitAddOrder = async function() {
+            const items = Object.keys(addOrderCart)
+                .filter(item => addOrderCart[item] > 0)
+                .map(item => ({
+                    name: itemNames[item],
+                    quantity: addOrderCart[item],
+                    price: prices[item]
+                }));
+
+            if (items.length === 0) {
+                alert('商品を選択してください');
+                return;
+            }
+
+            // このテーブルの既存注文からユーザー情報を取得
+            const tableOrders = Object.entries(allOrders).filter(([id, order]) => 
+                order.tableNumber == currentTableNum
+            );
+            
+            const existingOrder = tableOrders.length > 0 ? tableOrders[0][1] : null;
+
+            const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            const orderData = {
+                tableNumber: currentTableNum,
+                userId: existingOrder?.userId || 'staff',
+                userName: existingOrder?.userName || 'ゲスト',
+                items: items,
+                total: total,
+                timestamp: new Date().toISOString()
+            };
+
+            // Firebaseに保存
+            const { push } = await import("https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js");
+            const ordersRef = ref(database, 'orders');
+            await push(ordersRef, orderData);
+
+            closeAddOrder();
+            closeDetail();
+        };
+
+        window.completeOrder = async function() {
+            if (!currentOrderId) return;
+
+            if (confirm('会計を完了しますか？')) {
+                const orderRef = ref(database, `orders/${currentOrderId}`);
+                await remove(orderRef);
+                closeDetail();
+            }
+        };
+    </script>
+</body>
+</html>
